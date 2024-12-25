@@ -8,6 +8,7 @@ linters:
     - gci
     - gochecknoglobals
     - gofumpt # False positive
+    - paralleltest # Not relevant
     - gosec
     - nestif
     - nlreturn
