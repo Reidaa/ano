@@ -10,6 +10,8 @@ TARGET := ano
 
 GO_BUILD_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 GO_FILES=$(shell go list ./... | grep -v /vendor/)
+GOOS := $(shell go env GOOS)
+GOARCH := $(shell go env GOARCH)
 
 CSV ?= malstat.csv
 DB ?= ${DATABASE}
@@ -26,35 +28,46 @@ $(TARGET):
 
 build: $(TARGET)
 	@true
+.PHONY: build
+
+test:
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go test -cover "-coverprofile=cover.out" -v $(TESTFLAGS) $(GO_FILES)
+.PHONY: test
 
 clean:
 	rm -f $(TARGET)
+.PHONY: clean
 
 vet:
 	go vet $(GO_FILES)
+.PHONY: vet
 
 fmt:
 	go fmt $(GO_FILES)
+.PHONY: fmt
 
 re: clean build
 .PHONY: re
 
-run: build
-	./$(TARGET) scrap --top 10 --db $(DB)
+scrap: re
+	./$(TARGET) $@
+.PHONY: scrap
 
-run-help: build
-	./$(TARGET) help
+help: re
+	./$(TARGET) $@
+.PHONY: help
 
-run-serve: build
-	./$(TARGET) serve
+serve: re
+	./$(TARGET) $@
+.PHONY: serve
 
-ansible:
-	ansible-playbook deployments/ansible/deploy.yml -vv
-
-deploy: build ansible clean
+version: re
+	./$(TARGET) $@
+.PHONY: version
 
 lint: build
 	golangci-lint run
+.PHONY: lint
 
 docker:
 	docker build -t ${REPOSITORY}/${TARGET}:${DOCKERTAG} -f ${DOCKERFILE} .
