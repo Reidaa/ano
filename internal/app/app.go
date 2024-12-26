@@ -22,7 +22,6 @@ func New(version string, build string, name string) *App {
 			Commands: []*cli.Command{
 				cmd.VersionCmd,
 				cmd.ScrapCmd,
-				cmd.VersionCmd,
 			},
 		},
 	}

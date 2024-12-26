@@ -14,8 +14,7 @@ func Connect(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	utils.Info.Println("Connecting to database")
 	if err != nil {
-		utils.Error.Println("Failed to connect to database")
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("failed to connect to database at %s: %w", dsn, err)
 	}
 
 	return db, nil
@@ -27,7 +26,6 @@ func Prepare(db *gorm.DB) error {
 
 	err := db.AutoMigrate(&animeModel{}, &TrackedModel{})
 	if err != nil {
-		utils.Error.Println("Failed to migrate database")
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 

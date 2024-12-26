@@ -52,7 +52,7 @@ func (db *Database) UpsertTrackedAnimes(animes []jikan.Anime) {
 	}
 
 	for _, d := range data {
-		utils.Debug.Println("Upserting in database:", d)
+		utils.Debug.Println("Upserting in database:", d.Title)
 		db.client.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "mal_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"title", "image_url", "rank"}),
