@@ -31,3 +31,13 @@ func (set *IntSet) Values(yield func(int) bool) {
 		}
 	}
 }
+
+func (set *IntSet) Slice() []int {
+	r := []int{}
+
+	for v := range set.Values {
+		r = append(r, v)
+	}
+
+	return r
+}
