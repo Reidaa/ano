@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/reidaa/ano/cmd"
 	"github.com/reidaa/ano/internal/app"
+	"github.com/reidaa/ano/pkg/utils"
 )
 
 // Populated by goreleaser during build.
@@ -28,13 +28,15 @@ func main() {
 
 	err = godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		utils.Error.Print("Error loading .env file")
+		os.Exit(1)
 	}
 
 	var app IApp = app.New(Version, Build, Name)
 
 	err = app.Start(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error.Print(err)
+		os.Exit(1)
 	}
 }

@@ -33,7 +33,7 @@ func (a *App) Start(args []string) error {
 	err := a.cli.Run(args)
 
 	if err != nil {
-		return fmt.Errorf("error occurred during run of the app: %w", err)
+		return fmt.Errorf("runtime error -> %w", err)
 	}
 
 	return nil

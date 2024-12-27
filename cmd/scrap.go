@@ -49,7 +49,7 @@ func runScrap(ctx *cli.Context) error {
 
 	err := scrap(top, connStr, skipRetrieval)
 	if err != nil {
-		return fmt.Errorf("failed to scrap the data: %w", err)
+		return fmt.Errorf("failed to scrap the data -> %w", err)
 	}
 
 	return nil
@@ -75,7 +75,7 @@ func scrap(top int, dbURL string, skipRetrieval bool) error {
 	utils.Info.Printf("Checking the top %d anime", top)
 	topAnimes, err = jikan.TopAnimeByRank(top)
 	if err != nil {
-		return fmt.Errorf("failed retrieve the top %d anime: %w", top, err)
+		return fmt.Errorf("failed retrieve the top %d anime -> %w", top, err)
 	}
 
 	for _, v := range topAnimes {
@@ -86,7 +86,7 @@ func scrap(top int, dbURL string, skipRetrieval bool) error {
 		utils.Info.Println("Database URL found")
 		db, err = database.New(dbURL)
 		if err != nil {
-			return fmt.Errorf("failed to initialize database connection: %w", err)
+			return fmt.Errorf("failed to initialize database connection -> %w", err)
 		}
 	}
 
