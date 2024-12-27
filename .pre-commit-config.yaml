@@ -8,7 +8,9 @@ repos:
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
+        exclude: ^.vscode/*
       - id: trailing-whitespace
+      - id: mixed-line-ending
   - repo: https://github.com/golangci/golangci-lint
     rev: v1.62.2
     hooks:
