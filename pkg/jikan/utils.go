@@ -45,6 +45,10 @@ func TopAnimeByRank(maxRank int) ([]Anime, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// To prevent -> 429 Too Many Requests
+		time.Sleep(COOLDOWN)
+
 		data = append(data, response.Data...)
 		maxCurrentRank = response.Data[len(response.Data)-1].Rank
 	}

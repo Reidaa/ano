@@ -50,3 +50,11 @@ type TopAnimeResponse struct {
 type AnimeResponse struct {
 	Data Anime `json:"data"`
 }
+
+type ErrorResponse struct {
+	Status    int    `json:"status"`
+	Type      string `json:"type"`
+	Message   string `json:"message"`
+	Error     string `json:"error"`
+	ReportUrl string `json:"report_url"`
+}
