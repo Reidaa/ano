@@ -42,3 +42,11 @@ type Pagination struct {
 	HasNextPage     bool `json:"has_next_page"`
 	Items           Item `json:"items"`
 }
+type TopAnimeResponse struct {
+	Data       []Anime    `json:"data"`
+	Pagination Pagination `json:"pagination"`
+}
+
+type AnimeResponse struct {
+	Data Anime `json:"data"`
+}

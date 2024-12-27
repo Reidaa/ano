@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/reidaa/ano/cmd"
 	"github.com/reidaa/ano/internal/app"
 )
@@ -20,12 +21,19 @@ type IApp interface {
 }
 
 func main() {
+	var err error
+
 	cmd.Version.Build = Build
 	cmd.Version.Version = Version
 
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	var app IApp = app.New(Version, Build, Name)
 
-	err := app.Start(os.Args)
+	err = app.Start(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}

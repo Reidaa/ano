@@ -7,6 +7,7 @@ import (
 	"github.com/reidaa/ano/pkg/database"
 	"github.com/reidaa/ano/pkg/jikan"
 	"github.com/reidaa/ano/pkg/utils"
+	"github.com/reidaa/ano/pkg/utils/intset"
 
 	"github.com/urfave/cli/v2"
 )
@@ -19,13 +20,19 @@ var ScrapCmd = &cli.Command{
 			Name:     "top",
 			Required: true,
 			Usage:    "Upmost anime to retrieve for storage",
+			EnvVars:  []string{"ANO_TOP"},
 		},
 		&cli.StringFlag{
 			Name:     "db",
 			Usage:    "Record to database using the given postgreSQL connection `string`",
 			Required: false,
-			Value:    "none",
-			EnvVars:  []string{"ANO_DB_URL"},
+			EnvVars:  []string{"ANO_DATABASE_URL"},
+		},
+		&cli.BoolFlag{
+			Name:     "skipRetrieval",
+			Required: false,
+			EnvVars:  []string{"ANO_DATABASE_SKIP_RETRIEVAL"},
+			Value:    false,
 		},
 	},
 	Action: runScrap,
@@ -34,8 +41,13 @@ var ScrapCmd = &cli.Command{
 func runScrap(ctx *cli.Context) error {
 	var connStr string = ctx.String("db")
 	var top int = ctx.Int("top")
+	var skipRetrieval = ctx.Bool("skipRetrieval")
 
-	err := scrap(top, connStr)
+	if top <= 0 {
+		return &utils.CliArgumentError{}
+	}
+
+	err := scrap(top, connStr, skipRetrieval)
 	if err != nil {
 		return fmt.Errorf("failed to scrap the data: %w", err)
 	}
@@ -49,34 +61,72 @@ type IDatabase interface {
 	InsertAnimes(animes []jikan.Anime)
 }
 
-func scrap(top int, dbURL string) error {
+type ICSVWriter interface {
+	Write(animes []jikan.Anime) error
+}
+
+func scrap(top int, dbURL string, skipRetrieval bool) error {
 	var data []jikan.Anime
 	var db IDatabase
+	var err error
+	var topAnimes []jikan.Anime
+	malIDs := intset.New()
 
-	db, err := database.New(dbURL)
+	utils.Info.Printf("Checking the top %d anime", top)
+	topAnimes, err = jikan.TopAnimeByRank(top)
 	if err != nil {
-		return fmt.Errorf("failed to initialize database connection: %w", err)
+		return fmt.Errorf("failed retrieve the top %d anime: %w", top, err)
 	}
 
-	if len(db.RetrieveTrackedAnimes()) >= jikan.MaxSafeHitPerDay {
-		utils.Warning.Println("Tracked anime limit reached, skipping new anime retrieval")
-	} else {
-		utils.Info.Println("Checking the top", top, "anime for any new entry")
-		topAnime, err := jikan.TopAnimeByRank(top)
+	for _, v := range topAnimes {
+		// if i >= top {
+		// 	break
+		// }
+		malIDs.Insert(v.MalID)
+	}
+
+	if dbURL != "" {
+		utils.Info.Println("Database URL found")
+		db, err = database.New(dbURL)
 		if err != nil {
-			utils.Error.Println(err)
-			return fmt.Errorf("failed retrieve the top %d anime: %w", top, err)
+			return fmt.Errorf("failed to initialize database connection: %w", err)
 		}
-		db.UpsertTrackedAnimes(topAnime)
 	}
 
-	tracked := db.RetrieveTrackedAnimes()
-	utils.Info.Println("Fetching", len(tracked), "entries")
+	if db != nil {
+		if !skipRetrieval {
+			tracked := db.RetrieveTrackedAnimes()
+			for _, v := range tracked {
+				malIDs.Insert(v.MalID)
+			}
 
-	for _, v := range tracked {
-		d, err := jikan.AnimeByID(v.MalID)
+			if len(tracked) < jikan.MaxSafeHitPerDay {
+				db.UpsertTrackedAnimes(topAnimes)
+			} else {
+				utils.Warning.Println("Tracked anime limit reached, skipping new anime retrieval")
+			}
+		}
+	} else {
+		utils.Info.Println("No database URL provided")
+	}
+
+	data = getAnimeData(malIDs.Slice())
+
+	if db != nil {
+		db.InsertAnimes(data)
+	}
+
+	return nil
+}
+
+func getAnimeData(malIDs []int) []jikan.Anime {
+	var data []jikan.Anime
+
+	utils.Info.Println("Fetching", len(malIDs), "entries")
+	for _, v := range malIDs {
+		d, err := jikan.AnimeByID(v)
 		// To prevent -> 429 Too Many Requests
-		time.Sleep(jikan.Cooldown)
+		time.Sleep(jikan.COOLDOWN)
 		if err != nil {
 			utils.Warning.Println(err, "| Skipping this entry")
 		} else {
@@ -88,7 +138,5 @@ func scrap(top int, dbURL string) error {
 		utils.Debug.Println(v.Titles[0].Title)
 	}
 
-	db.InsertAnimes(data)
-
-	return nil
+	return data
 }
