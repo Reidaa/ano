@@ -79,9 +79,6 @@ func scrap(top int, dbURL string, skipRetrieval bool) error {
 	}
 
 	for _, v := range topAnimes {
-		// if i >= top {
-		// 	break
-		// }
 		malIDs.Insert(v.MalID)
 	}
 

@@ -26,9 +26,19 @@ func New() (*Jikan, error) {
 	return &n, nil
 }
 
-func (j *Jikan) GetTopAnime(page int, animeType string) (*TopAnimeResponse, error) {
+func (j *Jikan) GetTopAnime(page int, animeType string, limit int) (*TopAnimeResponse, error) {
 	var responseObj TopAnimeResponse
 	params := url.Values{}
+
+	params.Add("page", strconv.Itoa(page))
+
+	if limit != DEFAULT_LIMIT {
+		params.Add("limit", strconv.Itoa(limit))
+	}
+
+	if animeType != "" {
+		params.Add("type", animeType)
+	}
 
 	base, err := url.Parse(BaseURL)
 	if err != nil {
@@ -36,11 +46,6 @@ func (j *Jikan) GetTopAnime(page int, animeType string) (*TopAnimeResponse, erro
 	}
 
 	base.Path += "/top/anime"
-	params.Add("page", strconv.Itoa(page))
-
-	if animeType != "" {
-		params.Add("type", animeType)
-	}
 
 	base.RawQuery = params.Encode()
 	url := base.String()

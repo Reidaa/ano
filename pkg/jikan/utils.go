@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"time"
-
-	"github.com/reidaa/ano/pkg/utils"
 )
 
 const (
@@ -13,6 +11,7 @@ const (
 	MaxSafeHitPerDay    int           = 60 * 60 * 20
 	BaseURL             string        = "https://api.jikan.moe/v4"
 	COOLDOWN            time.Duration = time.Second
+	DEFAULT_LIMIT       int           = 25
 )
 
 func RemoveUnrankedAnime(in []Anime) []Anime {
@@ -27,43 +26,14 @@ func RemoveUnrankedAnime(in []Anime) []Anime {
 	return out
 }
 
-func TopAnime(n int) (*[]Anime, error) {
-	var data []Anime
-
-	client, err := New()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize jikan client -> %w", err)
-	}
-
-	types := []string{"tv", "movie", "ova", "tv_special", "special"}
-
-	for t := 0; t != len(types); t++ {
-		response, err := client.GetTopAnime(1, types[t])
-		if err != nil {
-			return nil, err
-		}
-
-		data = append(data, response.Data...)
-
-		for i := 2; i <= n/response.Pagination.Items.PerPage; i++ {
-			response, err := client.GetTopAnime(i, types[t])
-			if err != nil {
-				return nil, err
-			}
-			data = append(data, response.Data...)
-		}
-	}
-
-	for i := 0; i != len(data); i++ {
-		utils.Debug.Println(data[i].Titles[0].Title, data[i].Rank)
-	}
-
-	return &data, nil
-}
-
 func TopAnimeByRank(maxRank int) ([]Anime, error) {
 	var data []Anime
 	var maxCurrentRank int = 0
+	var limit int = DEFAULT_LIMIT
+
+	if maxRank < DEFAULT_LIMIT {
+		limit = maxRank
+	}
 
 	client, err := New()
 	if err != nil {
@@ -71,7 +41,7 @@ func TopAnimeByRank(maxRank int) ([]Anime, error) {
 	}
 
 	for i := 1; maxCurrentRank < maxRank; i++ {
-		response, err := client.GetTopAnime(i, "")
+		response, err := client.GetTopAnime(i, "", limit)
 		if err != nil {
 			return nil, err
 		}
