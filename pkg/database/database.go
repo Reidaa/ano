@@ -24,13 +24,13 @@ func New(dbURL string) (*Database, error) {
 	db, err := Connect(dbURL)
 	if err != nil {
 		utils.Error.Println(err)
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("failed to connect to database -> %w", err)
 	}
 
 	err = Prepare(db)
 	if err != nil {
 		utils.Error.Println(err)
-		return nil, fmt.Errorf("failed to prepare the database: %w", err)
+		return nil, fmt.Errorf("failed to prepare the database -> %w", err)
 	}
 
 	n.client = db
@@ -52,7 +52,7 @@ func (db *Database) UpsertTrackedAnimes(animes []jikan.Anime) {
 	}
 
 	for _, d := range data {
-		utils.Debug.Println("Upserting in database:", d.Title)
+		utils.Debug.Printf("Upserting in database: %s", d.Title)
 		db.client.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "mal_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"title", "image_url", "rank"}),

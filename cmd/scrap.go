@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/reidaa/ano/pkg/database"
 	"github.com/reidaa/ano/pkg/jikan"
 	"github.com/reidaa/ano/pkg/utils"
@@ -11,6 +13,12 @@ import (
 
 	"github.com/urfave/cli/v2"
 )
+
+type IDatabase interface {
+	UpsertTrackedAnimes(animes []jikan.Anime)
+	RetrieveTrackedAnimes() []database.TrackedModel
+	InsertAnimes(animes []jikan.Anime)
+}
 
 var ScrapCmd = &cli.Command{
 	Name: "scrap",
@@ -49,16 +57,10 @@ func runScrap(ctx *cli.Context) error {
 
 	err := scrap(top, connStr, skipRetrieval)
 	if err != nil {
-		return fmt.Errorf("failed to scrap the data -> %w", err)
+		return fmt.Errorf("failed to scrap data -> %w", err)
 	}
 
 	return nil
-}
-
-type IDatabase interface {
-	UpsertTrackedAnimes(animes []jikan.Anime)
-	RetrieveTrackedAnimes() []database.TrackedModel
-	InsertAnimes(animes []jikan.Anime)
 }
 
 func scrap(top int, dbURL string, skipRetrieval bool) error {
@@ -109,6 +111,8 @@ func scrap(top int, dbURL string, skipRetrieval bool) error {
 		db.InsertAnimes(data)
 	}
 
+	tableRender(data)
+
 	return nil
 }
 
@@ -132,4 +136,19 @@ func getAnimeData(malIDs []int) []jikan.Anime {
 	}
 
 	return data
+}
+
+func tableRender(animes []jikan.Anime) {
+	t := table.NewWriter()
+
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"mal_id", "title", "rank", "score", "members", "favorites"})
+
+	for _, v := range animes {
+		t.AppendRow(table.Row{
+			v.MalID, v.Titles[0].Title, v.Rank, v.Score, v.Members, v.Favorites,
+		})
+	}
+
+	t.Render()
 }
