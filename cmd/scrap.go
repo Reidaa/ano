@@ -61,10 +61,6 @@ type IDatabase interface {
 	InsertAnimes(animes []jikan.Anime)
 }
 
-type ICSVWriter interface {
-	Write(animes []jikan.Anime) error
-}
-
 func scrap(top int, dbURL string, skipRetrieval bool) error {
 	var data []jikan.Anime
 	var db IDatabase
