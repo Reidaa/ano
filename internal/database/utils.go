@@ -3,11 +3,17 @@ package database
 import (
 	"fmt"
 
+	"github.com/reidaa/ano/internal/database/anime"
+	"github.com/reidaa/ano/internal/database/timeseries"
 	"github.com/reidaa/ano/pkg/utils"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+type Tabler interface {
+	TableName() string
+}
 
 // Connects to the database using the provided DSN.
 func Connect(dsn string) (*gorm.DB, error) {
@@ -24,7 +30,7 @@ func Connect(dsn string) (*gorm.DB, error) {
 func Prepare(db *gorm.DB) error {
 	utils.Info.Println("Migrating the database")
 
-	err := db.AutoMigrate(&animeModel{}, &TrackedModel{})
+	err := db.AutoMigrate(&timeseries.TimeseriesModel{}, &anime.AnimeModel{})
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}

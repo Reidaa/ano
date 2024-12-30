@@ -1,23 +1,17 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"time"
-
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/reidaa/ano/pkg/database"
+	"github.com/reidaa/ano/internal/database/anime"
+	"github.com/reidaa/ano/internal/scrap"
 	"github.com/reidaa/ano/pkg/jikan"
-	"github.com/reidaa/ano/pkg/utils"
-	"github.com/reidaa/ano/pkg/utils/intset"
 
 	"github.com/urfave/cli/v2"
 )
 
 type IDatabase interface {
-	UpsertTrackedAnimes(animes []jikan.Anime)
-	RetrieveTrackedAnimes() []database.TrackedModel
-	InsertAnimes(animes []jikan.Anime)
+	UpsertTrackedAnimes(animes []jikan.Anime) error
+	RetrieveTrackedAnimes() ([]*anime.AnimeModel, error)
+	InsertAnimes(animes []jikan.Anime) error
 }
 
 var ScrapCmd = &cli.Command{
@@ -47,108 +41,136 @@ var ScrapCmd = &cli.Command{
 }
 
 func runScrap(ctx *cli.Context) error {
-	var connStr string = ctx.String("db")
-	var top int = ctx.Int("top")
-	var skipRetrieval = ctx.Bool("skipRetrieval")
+	// var connStr string = ctx.String("db")
+	// var top int = ctx.Int("top")
+	// var skipRetrieval = ctx.Bool("skipRetrieval")
 
-	if top <= 0 {
-		return &utils.CliArgumentError{}
+	// if top <= 0 {
+	// 	return &utils.CliArgumentError{}
+	// }
+	conf := scrap.Config{
+		SkipRetrieval: ctx.Bool("skipRetrieval"),
+		Top:           ctx.Int("top"),
+		DatabaseURL:   ctx.String("db"),
 	}
 
-	err := scrap(top, connStr, skipRetrieval)
+	scrapper, err := scrap.New(conf)
 	if err != nil {
-		return fmt.Errorf("failed to scrap data -> %w", err)
+		return err
 	}
+
+	err = scrapper.Start()
+	if err != nil {
+		return err
+	}
+
+	// err := scrap(top, connStr, skipRetrieval)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to scrap data -> %w", err)
+	// }
 
 	return nil
 }
 
-func scrap(top int, dbURL string, skipRetrieval bool) error {
-	var data []jikan.Anime
-	var db IDatabase
-	var err error
-	var topAnimes []jikan.Anime
-	malIDs := intset.New()
+// func scrappper(top int, dbURL string, skipRetrieval bool) error {
+// 	var data []jikan.Anime
+// 	var db IDatabase
+// 	var err error
+// 	var topAnimes []jikan.Anime
+// 	malIDs := intset.New()
 
-	utils.Info.Printf("Checking the top %d anime", top)
-	topAnimes, err = jikan.TopAnimeByRank(top)
-	if err != nil {
-		return fmt.Errorf("failed retrieve the top %d anime -> %w", top, err)
-	}
+// 	utils.Info.Printf("Checking the top %d anime", top)
+// 	topAnimes, err = jikan.TopAnimeByRank(top)
+// 	if err != nil {
+// 		return fmt.Errorf("failed retrieve the top %d anime -> %w", top, err)
+// 	}
 
-	for _, v := range topAnimes {
-		malIDs.Insert(v.MalID)
-	}
+// 	for i := range topAnimes {
+// 		malIDs.Insert(topAnimes[i].MalID)
+// 	}
 
-	if dbURL != "" {
-		utils.Info.Println("Database URL found")
-		db, err = database.New(dbURL)
-		if err != nil {
-			return fmt.Errorf("failed to initialize database connection -> %w", err)
-		}
-	}
+// 	if dbURL != "" {
+// 		utils.Info.Println("Database URL found")
+// 		db, err = database.New(dbURL)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to initialize database connection -> %w", err)
+// 		}
+// 	}
 
-	if db != nil {
-		if !skipRetrieval {
-			tracked := db.RetrieveTrackedAnimes()
-			for _, v := range tracked {
-				malIDs.Insert(v.MalID)
-			}
+// 	if db != nil {
+// 		if !skipRetrieval {
+// 			err = retrieval(db, malIDs)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
+// 		err = db.UpsertTrackedAnimes(topAnimes)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		utils.Info.Println("No database URL provided")
+// 	}
 
-			if len(tracked) < jikan.MaxSafeHitPerDay {
-				db.UpsertTrackedAnimes(topAnimes)
-			} else {
-				utils.Warning.Println("Tracked anime limit reached, skipping new anime retrieval")
-			}
-		}
-	} else {
-		utils.Info.Println("No database URL provided")
-	}
+// 	data = getAnimeData(malIDs.Slice())
 
-	data = getAnimeData(malIDs.Slice())
+// 	if db != nil {
+// 		err = db.InsertAnimes(data)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	if db != nil {
-		db.InsertAnimes(data)
-	}
+// 	tableRender(data)
 
-	tableRender(data)
+// 	return nil
+// }
 
-	return nil
-}
+// func retrieval(db IDatabase, malIDs *intset.IntSet) error {
+// 	tracked, err := db.RetrieveTrackedAnimes()
+// 	if err != nil {
+// 		return fmt.Errorf("failed to retrieve anime from databas -> %w", err)
+// 	}
+// 	for i := range tracked {
+// 		malIDs.Insert(tracked[i].MalID)
+// 	}
 
-func getAnimeData(malIDs []int) []jikan.Anime {
-	var data []jikan.Anime
+// 	return nil
+// }
 
-	utils.Info.Println("Fetching", len(malIDs), "entries")
-	for _, v := range malIDs {
-		d, err := jikan.AnimeByID(v)
-		// To prevent -> 429 Too Many Requests
-		time.Sleep(jikan.COOLDOWN)
-		if err != nil {
-			utils.Warning.Println(err, "| Skipping this entry")
-		} else {
-			data = append(data, *d)
-		}
-	}
+// func getAnimeData(malIDs []int) []jikan.Anime {
+// 	var data []jikan.Anime
 
-	for _, v := range data {
-		utils.Debug.Println(v.Titles[0].Title)
-	}
+// 	utils.Info.Println("Fetching", len(malIDs), "entries")
+// 	for i := range malIDs {
+// 		d, err := jikan.AnimeByID(malIDs[i])
+// 		// To prevent -> 429 Too Many Requests
+// 		time.Sleep(jikan.COOLDOWN)
+// 		if err != nil {
+// 			utils.Warning.Println(err, "| Skipping this entry")
+// 		} else {
+// 			data = append(data, *d)
+// 		}
+// 	}
 
-	return data
-}
+// 	for i := range data {
+// 		utils.Debug.Println(data[i].Titles[0].Title)
+// 	}
 
-func tableRender(animes []jikan.Anime) {
-	t := table.NewWriter()
+// 	return data
+// }
 
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"mal_id", "title", "rank", "score", "members", "favorites"})
+// func tableRender(animes []jikan.Anime) {
+// 	t := table.NewWriter()
 
-	for _, v := range animes {
-		t.AppendRow(table.Row{
-			v.MalID, v.Titles[0].Title, v.Rank, v.Score, v.Members, v.Favorites,
-		})
-	}
+// 	t.SetOutputMirror(os.Stdout)
+// 	t.AppendHeader(table.Row{"mal_id", "title", "rank", "score", "members", "favorites"})
 
-	t.Render()
-}
+// 	for i := range animes {
+// 		t.AppendRow(table.Row{
+// 			animes[i].MalID, animes[i].Titles[0].Title, animes[i].Rank, animes[i].Score, animes[i].Members, animes[i].Favorites,
+// 		})
+// 	}
+
+// 	t.Render()
+// }

@@ -32,9 +32,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	var app IApp = app.New(Version, Build, Name)
+	var cli IApp = app.New(Name)
 
-	err = app.Start(os.Args)
+	err = cli.Start(os.Args)
 	if err != nil {
 		utils.Error.Print(err)
 		os.Exit(1)

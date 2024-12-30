@@ -8,15 +8,11 @@ import (
 )
 
 type App struct {
-	version string
-	build   string
-	cli     *cli.App
+	cli *cli.App
 }
 
-func New(version string, build string, name string) *App {
+func New(name string) *App {
 	app := &App{
-		version: version,
-		build:   build,
 		cli: &cli.App{
 			Name: name,
 			Commands: []*cli.Command{
