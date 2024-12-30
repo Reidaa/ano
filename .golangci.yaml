@@ -8,11 +8,11 @@ linters:
     - gci
     - gochecknoglobals
     - gofumpt # False positive
-    - paralleltest # Not relevant
     - gosec
     - nestif
     - nlreturn
     - noctx # Too strict
+    - paralleltest # Not relevant
     - prealloc # Too strict
     - revive
     - stylecheck # Too strict
@@ -20,6 +20,15 @@ linters:
     - varnamelen
     - wsl
   fast: false
+
+linters-settings:
+  gocritic:
+    enable-all: true
+    disabled-checks:
+      - captLocal
+      - commentedOutCode
+  govet:
+    enable-all: true
 
 run:
   go: "1.23"
