@@ -69,6 +69,10 @@ lint: build
 	golangci-lint run
 .PHONY: lint
 
+format:
+	betteralign -apply ${GO_FILES}
+.PHONY: format
+
 docker:
 	docker build -t ${REPOSITORY}/${TARGET}:${DOCKERTAG} -f ${DOCKERFILE} .
 .PHONY: docker
