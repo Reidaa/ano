@@ -7,14 +7,14 @@ import (
 )
 
 func TestInsert(t *testing.T) {
-	set := intset.New()
+	data := intset.New()
 
-	set.Insert(3)
-	set.Insert(5)
-	set.Insert(2)
+	data.Insert(3)
+	data.Insert(5)
+	data.Insert(2)
 
-	if set.Len() != 3 {
-		t.Errorf("length of data is wrong")
+	if got, want := data.Len(), 3; got != want {
+		t.Errorf("length of data = %v, want %d", got, want)
 	}
 }
 
@@ -26,8 +26,8 @@ func TestInsert2(t *testing.T) {
 	data.Insert(2)
 	data.Insert(3)
 
-	if data.Len() != 3 {
-		t.Errorf("length of data is wrong")
+	if got, want := data.Len(), 3; got != want {
+		t.Errorf("length of data = %v, want %d", got, want)
 	}
 }
 
@@ -41,8 +41,8 @@ func TestDelete(t *testing.T) {
 
 	data.Delete(3)
 
-	if data.Len() != 2 {
-		t.Errorf("length of data is wrong")
+	if got, want := data.Len(), 2; got != want {
+		t.Errorf("length of data = %v, want %d", got, want)
 	}
 }
 
@@ -60,7 +60,7 @@ func TestIterate(t *testing.T) {
 		i++
 	}
 
-	if i != 3 {
-		t.Errorf("iteration failed")
+	if got, want := i, 3; got != want {
+		t.Errorf("number of iterations = %v, want %d", got, want)
 	}
 }
