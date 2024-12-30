@@ -3,8 +3,8 @@ package netclient
 import "fmt"
 
 type UnsuccessfulRequestError struct {
-	StatusCode int
 	Url        string
+	StatusCode int
 }
 
 func (e *UnsuccessfulRequestError) Error() string {

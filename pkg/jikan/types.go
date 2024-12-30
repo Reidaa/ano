@@ -17,18 +17,18 @@ type AnimeImage struct {
 }
 
 type Anime struct {
-	MalID      int        `json:"mal_id"`
-	URL        string     `json:"url"`
 	Images     AnimeImage `json:"images"`
-	Titles     []Title    `json:"titles"`
+	URL        string     `json:"url"`
 	Type       string     `json:"type"`
 	Status     string     `json:"status"`
-	Score      float32    `json:"score"`
+	Titles     []Title    `json:"titles"`
+	MalID      int        `json:"mal_id"`
 	ScoredBy   int        `json:"scored_by"`
 	Rank       int        `json:"rank"` // Ranking are not accurate
 	Popularity int        `json:"popularity"`
 	Members    int        `json:"members"`
 	Favorites  int        `json:"favorites"`
+	Score      float32    `json:"score"`
 }
 
 type Item struct {
@@ -52,9 +52,9 @@ type AnimeResponse struct {
 }
 
 type ErrorResponse struct {
-	Status    int    `json:"status"`
 	Type      string `json:"type"`
 	Message   string `json:"message"`
 	Error     string `json:"error"`
 	ReportUrl string `json:"report_url"`
+	Status    int    `json:"status"`
 }
