@@ -20,18 +20,6 @@ func New(db *gorm.DB) *Repository {
 
 // func (r *Repository) Create(anime animeModel) (*animeModel, error)
 
-func (r *Repository) List() ([]*AnimeModel, error) {
-	var err error
-	animes := make([]*AnimeModel, 0)
-
-	err = r.db.Find(&animes).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve all anime -> %w", err)
-	}
-
-	return animes, nil
-}
-
 func (r *Repository) Read() ([]*AnimeModel, error) {
 	var err error
 	animes := make([]*AnimeModel, 0)

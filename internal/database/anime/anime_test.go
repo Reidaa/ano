@@ -1,4 +1,4 @@
-package database_test
+package anime_test
 
 import (
 	"fmt"
@@ -88,10 +88,11 @@ func TestMain(m *testing.M) {
 
 func TestUpsert(t *testing.T) {
 	d := &anime.AnimeModel{
-		Title: "Anime 1",
-		Type:  "TV",
-		MalID: 1,
-		Rank:  1,
+		Title:    "TestUpsert",
+		Type:     "TV",
+		ImageURL: "TestUpsert.jpg",
+		MalID:    42,
+		Rank:     420,
 	}
 
 	repo := anime.New(db)
@@ -101,9 +102,9 @@ func TestUpsert(t *testing.T) {
 		t.Fatalf("repo.Upsert() failed with %q", err)
 	}
 
-	allAnimu, err := repo.List()
+	allAnimu, err := repo.Read()
 	if err != nil {
-		t.Fatalf("repo.List() failed with %q", err)
+		t.Fatalf("repo.Read() failed with %q", err)
 	}
 
 	if got, want := len(allAnimu), 1; got != want {
@@ -112,12 +113,13 @@ func TestUpsert(t *testing.T) {
 
 }
 
-func TestRead(t *testing.T) {
+func TestReadByMalID(t *testing.T) {
 	d := &anime.AnimeModel{
-		Title: "Anime 1",
-		Type:  "TV",
-		MalID: 1,
-		Rank:  1,
+		Title:    "TestReadByMalID",
+		Type:     "TV",
+		ImageURL: "TestReadByMalID.jpg",
+		MalID:    54,
+		Rank:     456,
 	}
 
 	repo := anime.New(db)
@@ -127,21 +129,41 @@ func TestRead(t *testing.T) {
 		t.Fatalf("repo.Upsert() failed with %q", err)
 	}
 
-	oneAnimu, err := repo.ReadByMalID(1)
+	oneAnimu, err := repo.ReadByMalID(uint(d.MalID))
 	if err != nil {
 		t.Fatalf("repo.ReadByMalID() failed with %q", err)
 	}
 
-	if got, want := oneAnimu.Title, "Anime 1"; got != want {
-		t.Errorf("row retrieved = %v, want %v", got, want)
+	if got, want := oneAnimu.Title, d.Title; got != want {
+		t.Errorf("anime.Title = %v, want %v", got, want)
+	}
+}
+
+func TestReadByID(t *testing.T) {
+	d := &anime.AnimeModel{
+		Title:    "TestReadByID",
+		Type:     "TV",
+		ImageURL: "TestReadByID.jpg",
+		MalID:    4965,
+		Rank:     31536,
+		Model: gorm.Model{
+			ID: 56654,
+		},
 	}
 
-	oneAnimu, err = repo.ReadByID(1)
+	repo := anime.New(db)
+
+	err := repo.Upsert(d)
+	if err != nil {
+		t.Fatalf("repo.Upsert() failed with %q", err)
+	}
+
+	oneAnimu, err := repo.ReadByID(56654)
 	if err != nil {
 		t.Fatalf("repo.ReadByID() failed with %q", err)
 	}
 
-	if got, want := oneAnimu.Title, "Anime 1"; got != want {
-		t.Errorf("row retrieved = %v, want %v", got, want)
+	if got, want := oneAnimu.Title, d.Title; got != want {
+		t.Errorf("anime.Title = %v, want %v", got, want)
 	}
 }
