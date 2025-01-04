@@ -17,18 +17,18 @@ type AnimeImage struct {
 }
 
 type Anime struct {
-	MalID      int        `json:"mal_id"`
-	URL        string     `json:"url"`
 	Images     AnimeImage `json:"images"`
-	Titles     []Title    `json:"titles"`
+	URL        string     `json:"url"`
 	Type       string     `json:"type"`
 	Status     string     `json:"status"`
-	Score      float32    `json:"score"`
+	Titles     []Title    `json:"titles"`
+	MalID      int        `json:"mal_id"`
 	ScoredBy   int        `json:"scored_by"`
 	Rank       int        `json:"rank"` // Ranking are not accurate
 	Popularity int        `json:"popularity"`
 	Members    int        `json:"members"`
 	Favorites  int        `json:"favorites"`
+	Score      float32    `json:"score"`
 }
 
 type Item struct {
@@ -41,4 +41,20 @@ type Pagination struct {
 	LastVisiblePage int  `json:"last_visible_page"`
 	HasNextPage     bool `json:"has_next_page"`
 	Items           Item `json:"items"`
+}
+type TopAnimeResponse struct {
+	Data       []Anime    `json:"data"`
+	Pagination Pagination `json:"pagination"`
+}
+
+type AnimeResponse struct {
+	Data Anime `json:"data"`
+}
+
+type ErrorResponse struct {
+	Type      string `json:"type"`
+	Message   string `json:"message"`
+	Error     string `json:"error"`
+	ReportUrl string `json:"report_url"`
+	Status    int    `json:"status"`
 }

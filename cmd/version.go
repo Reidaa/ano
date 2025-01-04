@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var Version struct {
@@ -11,10 +11,14 @@ var Version struct {
 	Build   string
 }
 
-// VersionCmd prints version information to stdout.
-// It displays the build number and version string of the application.
-// Returns nil on successful execution.
-func VersionCmd(_ *cli.Context) error {
+var VersionCmd = &cli.Command{
+	Name:    "version",
+	Aliases: []string{"v"},
+	Usage:   "Version and Release information",
+	Action:  runVersion,
+}
+
+func runVersion(_ *cli.Context) error {
 	fmt.Printf("Build:\t\t%s\n", Version.Build)
 	fmt.Printf("Version:\t%s\n", Version.Version)
 	return nil

@@ -27,4 +27,3 @@ RUN adduser \
 USER appuser
 
 COPY --from=build /app/ano /
-

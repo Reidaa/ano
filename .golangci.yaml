@@ -1,3 +1,6 @@
+run:
+  timeout: 10m
+
 linters:
   enable-all: true
   disable:
@@ -8,18 +11,33 @@ linters:
     - gci
     - gochecknoglobals
     - gofumpt # False positive
-    - gosec
     - nestif
     - nlreturn
     - noctx # Too strict
+    - paralleltest # Not relevant
     - prealloc # Too strict
     - revive
     - stylecheck # Too strict
     - tagliatelle
     - varnamelen
+    - wrapcheck # Too strict
     - wsl
   fast: false
 
-run:
-  go: "1.23"
-  timeout: 10m
+linters-settings:
+  gocritic:
+    enable-all: true
+    disabled-checks:
+      - captLocal
+      - commentedOutCode
+  govet:
+    enable-all: true
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  show-stats: true
+  sort-results: true

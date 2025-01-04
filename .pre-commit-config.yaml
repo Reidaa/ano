@@ -3,3 +3,16 @@ repos:
     rev: v8.21.2
     hooks:
       - id: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: ^.vscode/*
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.62.2
+    hooks:
+      - id: golangci-lint-config-verify
+      # - id: golangci-lint
