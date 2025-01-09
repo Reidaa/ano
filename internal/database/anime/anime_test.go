@@ -3,6 +3,7 @@ package anime_test
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -10,14 +11,13 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/reidaa/ano/internal/database"
 	"github.com/reidaa/ano/internal/database/anime"
-	"github.com/reidaa/ano/pkg/utils"
 	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 
 func TestMain(m *testing.M) {
-	utils.Debug.Println("TestMain")
+	slog.Debug("TestMain")
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 
 	log.Println("Connecting to database on url: ", dbURL)
 
-	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
+	_ = resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	pool.MaxWait = 120 * time.Second
@@ -129,7 +129,7 @@ func TestReadByMalID(t *testing.T) {
 		t.Fatalf("repo.Upsert() failed with %q", err)
 	}
 
-	oneAnimu, err := repo.ReadByMalID(uint(d.MalID))
+	oneAnimu, err := repo.ReadByMalID(d.MalID)
 	if err != nil {
 		t.Fatalf("repo.ReadByMalID() failed with %q", err)
 	}

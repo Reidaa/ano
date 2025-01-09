@@ -2,12 +2,12 @@ package database
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/reidaa/ano/internal/database/anime"
 	"github.com/reidaa/ano/internal/database/timeseries"
 	"github.com/reidaa/ano/pkg/jikan"
-	"github.com/reidaa/ano/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -22,13 +22,13 @@ func New(dbURL string) (*Database, error) {
 
 	db, err := Connect(dbURL)
 	if err != nil {
-		utils.Error.Println(err)
+		slog.Error("failed to connect to dabatase", slog.Any("error", err))
 		return nil, fmt.Errorf("failed to connect to database -> %w", err)
 	}
 
 	err = Prepare(db)
 	if err != nil {
-		utils.Error.Println(err)
+		slog.Error("failed to migrate the database", slog.Any("error", err))
 		return nil, fmt.Errorf("failed to prepare the database -> %w", err)
 	}
 

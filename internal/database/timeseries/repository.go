@@ -2,8 +2,8 @@ package timeseries
 
 import (
 	"fmt"
+	"log/slog"
 
-	"github.com/reidaa/ano/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,8 @@ func New(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) Create(data *TimeseriesModel) error {
-	utils.Debug.Printf("Inserting in db snapshot of %s taken at %s", data.Title, data.Timestamp.UTC())
+	slog.Debug(fmt.Sprintf("Inserting in db snapshot of %s taken at %s", data.Title, data.Timestamp.UTC()))
+
 	result := r.db.Create(&data)
 	if result.Error != nil {
 		return fmt.Errorf("failed to insert data -> %w", result.Error)

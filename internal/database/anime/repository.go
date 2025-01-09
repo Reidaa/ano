@@ -2,8 +2,8 @@ package anime
 
 import (
 	"fmt"
+	"log/slog"
 
-	"github.com/reidaa/ano/pkg/utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -32,7 +32,7 @@ func (r *Repository) Read() ([]*AnimeModel, error) {
 	return animes, nil
 }
 
-func (r *Repository) ReadByID(ID uint) (*AnimeModel, error) {
+func (r *Repository) ReadByID(ID int) (*AnimeModel, error) {
 	var err error
 	var anime AnimeModel
 
@@ -44,7 +44,7 @@ func (r *Repository) ReadByID(ID uint) (*AnimeModel, error) {
 	return &anime, nil
 }
 
-func (r *Repository) ReadByMalID(malID uint) (*AnimeModel, error) {
+func (r *Repository) ReadByMalID(malID int) (*AnimeModel, error) {
 	var err error
 	var anime AnimeModel
 
@@ -60,7 +60,7 @@ func (r *Repository) ReadByMalID(malID uint) (*AnimeModel, error) {
 // func (r *Repository) UpdateMany(IDs []uint) (int, error)
 
 func (r *Repository) Upsert(anime *AnimeModel) error {
-	utils.Debug.Printf("Upserting in database: %s", anime.Title)
+	slog.Debug(fmt.Sprintf("Upserting in database: %s", anime.Title))
 
 	result := r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "mal_id"}},

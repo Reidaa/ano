@@ -1,7 +1,8 @@
-package scrap
+package pull
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -10,26 +11,34 @@ import (
 	"github.com/reidaa/ano/internal/database/anime"
 	"github.com/reidaa/ano/internal/database/timeseries"
 	"github.com/reidaa/ano/pkg/jikan"
-	"github.com/reidaa/ano/pkg/utils"
 	"github.com/reidaa/ano/pkg/utils/intset"
 )
+
+type Config struct {
+	DatabaseURL   string
+	Top           int
+	SkipRetrieval bool
+}
 
 type Scrapper struct {
 	animeRepository *anime.Repository
 	tsRepository    *timeseries.Repository
+	log             *slog.Logger
 	animes          intset.IntSet
 	conf            Config
 	useDatabase     bool
 }
 
-func New(conf Config) (*Scrapper, error) {
+func New(conf Config, logger *slog.Logger) (*Scrapper, error) {
 	s := &Scrapper{
-		conf:   conf,
-		animes: *intset.New(),
+		conf:        conf,
+		animes:      *intset.New(),
+		useDatabase: false,
+		log:         logger,
 	}
 
-	if s.conf.DatabaseURL == "" {
-		s.useDatabase = false
+	if s.conf.DatabaseURL != "" {
+		s.useDatabase = true
 	}
 
 	return s, nil
@@ -39,16 +48,19 @@ func (s *Scrapper) Start() error {
 	var tops []jikan.Anime
 	var err error
 
+	if s.useDatabase {
+		err = s.connectToDatabase()
+		if err != nil {
+			return err
+		}
+	}
+
 	tops, err = s.checkTop()
 	if err != nil {
 		return err
 	}
 
 	if s.useDatabase {
-		err = s.connectToDatabase()
-		if err != nil {
-			return err
-		}
 		for i := range tops {
 			err = s.animeRepository.Upsert(&anime.AnimeModel{
 				MalID:    tops[i].MalID,
@@ -99,7 +111,8 @@ func (s *Scrapper) Start() error {
 }
 
 func (s *Scrapper) checkTop() ([]jikan.Anime, error) {
-	utils.Info.Printf("Checking the top %d anime", s.conf.Top)
+	slog.Info(fmt.Sprintf("Checking the top %d anime", s.conf.Top))
+
 	tops, err := jikan.TopAnimeByRank(s.conf.Top)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieve the top %d anime -> %w", s.conf.Top, err)
@@ -109,11 +122,12 @@ func (s *Scrapper) checkTop() ([]jikan.Anime, error) {
 		s.animes.Insert(tops[i].MalID)
 	}
 
+	slog.Info(fmt.Sprintf("Checking the top %d anime. Done", s.conf.Top))
 	return tops, nil
 }
 
 func (s *Scrapper) connectToDatabase() error {
-	utils.Info.Println("Establishing connection to database")
+	slog.Info("Establishing connection to database")
 	db, err := database.Connect(s.conf.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("failed to connect to database -> %w", err)
@@ -127,6 +141,7 @@ func (s *Scrapper) connectToDatabase() error {
 	s.animeRepository = anime.New(db)
 	s.tsRepository = timeseries.New(db)
 
+	slog.Info("Establishing connection to database. Done")
 	return nil
 }
 
@@ -144,20 +159,21 @@ func (s *Scrapper) retrieveAnimeFromDB() error {
 }
 
 func (s *Scrapper) getAnimeData(malIDs []int) []jikan.Anime {
+	slog.Info(fmt.Sprintf("Gathering data about the %d entries", len(malIDs)))
+
 	var data []jikan.Anime
 
-	utils.Info.Println("Fetching", len(malIDs), "entries")
 	for i := range malIDs {
 		d, err := jikan.AnimeByID(malIDs[i])
-		// To prevent -> 429 Too Many Requests
-		time.Sleep(jikan.COOLDOWN)
+		jikan.Cooldown()
 		if err != nil {
-			utils.Warning.Println(err, "| Skipping this entry")
+			slog.Warn("failed to fetch data, skipping", slog.Any("error", err))
 		} else {
 			data = append(data, *d)
 		}
 	}
 
+	slog.Info(fmt.Sprintf("Gathering data. Done"))
 	return data
 }
 

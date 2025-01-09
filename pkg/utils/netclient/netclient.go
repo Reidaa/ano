@@ -3,10 +3,9 @@ package netclient
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/reidaa/ano/pkg/utils"
 )
 
 const (
@@ -27,17 +26,17 @@ func New() *NetClient {
 }
 
 func (nc *NetClient) Get(url string) ([]byte, error) {
+	slog.Debug(fmt.Sprintf("GET %s", url))
+
 	var err error
 	var response *http.Response
 	var responseData []byte
-
-	utils.Debug.Printf("GET %s", url)
 
 	response, err = nc.client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("request to %s failed -> %w", url, err)
 	}
-	utils.Debug.Printf("Received a %d", response.StatusCode)
+	slog.Debug(fmt.Sprintf("Received a %d", response.StatusCode))
 
 	defer response.Body.Close()
 

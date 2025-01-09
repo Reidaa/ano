@@ -3,8 +3,6 @@ package jikan
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
-	"strconv"
 
 	"github.com/reidaa/ano/pkg/utils/netclient"
 )
@@ -28,28 +26,12 @@ func New() (*Jikan, error) {
 func (j *Jikan) GetTopAnime(page int, animeType string, limit int) (*TopAnimeResponse, error) {
 	var responseObj TopAnimeResponse
 	var err error
-	query := url.Values{}
-
-	if page > 0 {
-		query.Add("page", strconv.Itoa(page))
+	req := GetTopAnimeQuery{
+		Page:  page,
+		T:     animeType,
+		Limit: limit,
 	}
-
-	if limit > 0 {
-		query.Add("limit", strconv.Itoa(limit))
-	}
-
-	if animeType != "" {
-		query.Add("type", animeType)
-	}
-
-	base, err := url.Parse(BaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse url: %s -> %w", BaseURL, err)
-	}
-
-	base.Path += "/top/anime"
-	base.RawQuery = query.Encode()
-	URL := base.String()
+	URL, err := req.URL()
 
 	responseData, err := j.http.Get(URL)
 	if err != nil {
@@ -71,7 +53,7 @@ func (j *Jikan) GetTopAnime(page int, animeType string, limit int) (*TopAnimeRes
 func (j *Jikan) GetAnimeByID(malID int) (*AnimeResponse, error) {
 	var responseObj AnimeResponse
 
-	URL := fmt.Sprintf("%s/anime/%d", BaseURL, malID)
+	URL := fmt.Sprintf("%s/anime/%d", Endpoint, malID)
 
 	responseData, err := j.http.Get(URL)
 	if err != nil {

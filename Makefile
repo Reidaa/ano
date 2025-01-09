@@ -49,9 +49,9 @@ fmt:
 re: clean build
 .PHONY: re
 
-scrap: re
+pull: re
 	./$(TARGET) $@
-.PHONY: scrap
+.PHONY: pull
 
 help: re
 	./$(TARGET) $@

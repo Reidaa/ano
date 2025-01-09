@@ -6,14 +6,6 @@ import (
 	"time"
 )
 
-const (
-	MaxAllowedHitPerDay int           = 60 * 60 * 24
-	MaxSafeHitPerDay    int           = 60 * 60 * 20
-	BaseURL             string        = "https://api.jikan.moe/v4"
-	COOLDOWN            time.Duration = time.Second
-	DEFAULT_LIMIT       int           = 25
-)
-
 func RemoveUnrankedAnime(in []Anime) []Anime {
 	var out []Anime
 
@@ -29,9 +21,9 @@ func RemoveUnrankedAnime(in []Anime) []Anime {
 func TopAnimeByRank(maxRank int) ([]Anime, error) {
 	var data []Anime
 	var maxCurrentRank int = 0
-	var limit int = DEFAULT_LIMIT
+	var limit int = DefaultLimit
 
-	if maxRank < DEFAULT_LIMIT {
+	if maxRank < DefaultLimit {
 		limit = maxRank
 	}
 
@@ -47,7 +39,7 @@ func TopAnimeByRank(maxRank int) ([]Anime, error) {
 		}
 
 		// To prevent -> 429 Too Many Requests
-		time.Sleep(COOLDOWN)
+		time.Sleep(CooldownDuration)
 
 		data = append(data, response.Data...)
 		maxCurrentRank = response.Data[len(response.Data)-1].Rank
@@ -74,4 +66,9 @@ func AnimeByID(id int) (*Anime, error) {
 	}
 
 	return &d.Data, nil
+}
+
+// To prevent -> 429 Too Many Requests.
+func Cooldown() {
+	time.Sleep(CooldownDuration)
 }

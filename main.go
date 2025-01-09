@@ -1,42 +1,52 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/reidaa/ano/cmd"
-	"github.com/reidaa/ano/internal/app"
-	"github.com/reidaa/ano/pkg/utils"
+	"github.com/reidaa/ano/internal/commands"
+	"github.com/reidaa/ano/pkg/utils/logger"
+	"github.com/urfave/cli/v2"
 )
 
 // Populated by goreleaser during build.
 var (
+	// GoVersion = "unknown"
 	Version = "unknown"
 	Build   = "unknown"
 	Name    = "ano"
 )
 
-type IApp interface {
-	Start(args []string) error
+func newApp(logger *slog.Logger) *cli.App {
+	info := &commands.BuildInfo{
+		// GoVersion: GoVersion,
+		Version: Version,
+		Commit:  Build,
+	}
+	app := &cli.App{
+		Name:     Name,
+		Commands: []*cli.Command{},
+	}
+
+	app.Commands = append(app.Commands,
+		commands.NewVersionCommand(info).Cmd,
+		commands.NewPullCommand(logger).Cmd,
+	)
+
+	return app
 }
 
 func main() {
 	var err error
+	logger := logger.NewJSON()
 
-	cmd.Version.Build = Build
-	cmd.Version.Version = Version
+	slog.SetDefault(logger)
+	_ = godotenv.Load()
 
-	err = godotenv.Load()
+	err = newApp(logger).Run(os.Args)
 	if err != nil {
-		utils.Error.Print("Error loading .env file")
-		os.Exit(1)
-	}
-
-	var cli IApp = app.New(Name)
-
-	err = cli.Start(os.Args)
-	if err != nil {
-		utils.Error.Print(err)
+		// logger.Error("failed to run app", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
