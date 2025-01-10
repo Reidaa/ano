@@ -1,78 +1,52 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
-	"malstat/scrapper/cmd"
-
-	"github.com/urfave/cli"
+	"github.com/joho/godotenv"
+	"github.com/reidaa/ano/internal/commands"
+	"github.com/reidaa/ano/pkg/utils/logger"
+	"github.com/urfave/cli/v2"
 )
 
 // Populated by goreleaser during build.
 var (
+	// GoVersion = "unknown"
 	Version = "unknown"
 	Build   = "unknown"
-	Name    = "anoce"
+	Name    = "ano"
 )
 
-const (
-	port = 8080
-)
-
-func app() *cli.App {
-	app := &cli.App{
-		Name: Name,
-		Commands: []cli.Command{
-			{
-				Name:    "version",
-				Aliases: []string{"v"},
-				Usage:   "Version and Release information",
-				Action:  cmd.VersionCmd,
-			},
-			{
-				Name: "scrap",
-				Flags: []cli.Flag{
-					&cli.IntFlag{
-						Name:     "top",
-						Required: true,
-						Usage:    "Upmost anime to retrieve for storage",
-					},
-					&cli.StringFlag{
-						Name:     "db",
-						Usage:    "Record to database using the given postgreSQL connection `string`",
-						Required: true,
-					},
-				},
-				Action: cmd.ScrapCmd,
-			},
-			{
-				Name:  "serve",
-				Usage: "Start the REST API",
-				Flags: []cli.Flag{
-					&cli.IntFlag{
-						Name:     "port",
-						Required: false,
-						Usage:    "",
-						Value:    port,
-					},
-				},
-				Action: cmd.ServeCmd,
-			},
-		},
+func newApp(logger *slog.Logger) *cli.App {
+	info := &commands.BuildInfo{
+		// GoVersion: GoVersion,
+		Version: Version,
+		Commit:  Build,
 	}
+	app := &cli.App{
+		Name:     Name,
+		Commands: []*cli.Command{},
+	}
+
+	app.Commands = append(app.Commands,
+		commands.NewVersionCommand(info).Cmd,
+		commands.NewPullCommand(logger).Cmd,
+	)
 
 	return app
 }
 
 func main() {
-	cmd.Version.Build = Build
-	cmd.Version.Version = Version
+	var err error
+	logger := logger.NewJSON()
 
-	app := app()
+	slog.SetDefault(logger)
+	_ = godotenv.Load()
 
-	if err := app.Run(os.Args); err != nil {
-		fmt.Println(err)
+	err = newApp(logger).Run(os.Args)
+	if err != nil {
+		// logger.Error("failed to run app", slog.Any("error", err))
 		os.Exit(1)
 	}
 }

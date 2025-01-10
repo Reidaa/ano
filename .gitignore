@@ -3,6 +3,7 @@ out
 bin
 dist/
 ano
+.ignore/
 
 # Created by https://www.toptal.com/developers/gitignore/api/goland+all,go
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland+all,go
@@ -118,4 +119,23 @@ fabric.properties
 !.idea/codeStyles
 !.idea/runConfigurations
 
-# End of https://www.toptal.com/developers/gitignore/api/goland+all,go
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode

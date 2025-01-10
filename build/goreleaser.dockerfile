@@ -16,4 +16,3 @@ RUN adduser \
 USER appuser
 
 COPY ano /
-
