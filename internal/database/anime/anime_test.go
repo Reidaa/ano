@@ -11,6 +11,7 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/reidaa/ano/internal/database"
 	"github.com/reidaa/ano/internal/database/anime"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
@@ -98,9 +99,8 @@ func TestUpsert(t *testing.T) {
 	repo := anime.New(db)
 
 	err := repo.Upsert(d)
-	if err != nil {
-		t.Fatalf("repo.Upsert() failed with %q", err)
-	}
+	assert.NoError(t, err, "repo.Upsert() failed")
+	// t.Fatalf("repo.Upsert() failed with %q", err)
 
 	allAnimu, err := repo.Read()
 	if err != nil {

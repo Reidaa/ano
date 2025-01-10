@@ -31,7 +31,7 @@ func (j *Jikan) GetTopAnime(page int, animeType string, limit int) (*TopAnimeRes
 		T:     animeType,
 		Limit: limit,
 	}
-	URL, err := req.URL()
+	URL, _ := req.URL()
 
 	responseData, err := j.http.Get(URL)
 	if err != nil {

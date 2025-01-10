@@ -7,6 +7,7 @@ import (
 	"github.com/reidaa/ano/internal/database/anime"
 	"github.com/reidaa/ano/internal/database/timeseries"
 
+	slogGorm "github.com/orandin/slog-gorm"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -17,7 +18,10 @@ type Tabler interface {
 
 // Connects to the database using the provided DSN.
 func Connect(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	gormLogger := slogGorm.New()
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: gormLogger,
+	})
 	slog.Info("Connecting to database")
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database at %s: %w", dsn, err)

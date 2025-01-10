@@ -27,6 +27,6 @@ func NewRepository(logger *slog.Logger) (*Repository, error) {
 	return r, nil
 }
 
-func (r *Repository) TopAnime() (*TopAnimeResponse, error) {
+func (r *Repository) GetTopAnime() (*TopAnimeResponse, error) {
 	return nil, nil
 }
